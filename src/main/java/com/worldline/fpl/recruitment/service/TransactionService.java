@@ -16,23 +16,22 @@ import com.worldline.fpl.recruitment.json.TransactionResponse;
 
 /**
  * Transaction service
- * 
- * @author A525125
  *
+ * @author A525125
  */
 @Service
 public class TransactionService {
 
-	private AccountService accountService;
+    private AccountService accountService;
 
-	private TransactionRepository transactionRepository;
+    private TransactionRepository transactionRepository;
 
-	@Autowired
-	public TransactionService(AccountService accountService,
-			TransactionRepository transactionRepository) {
-		this.accountService = accountService;
-		this.transactionRepository = transactionRepository;
-	}
+    @Autowired
+    public TransactionService(AccountService accountService,
+                              TransactionRepository transactionRepository) {
+        this.accountService = accountService;
+        this.transactionRepository = transactionRepository;
+    }
 
 	/**
 	 * Get transactions by account
@@ -54,18 +53,33 @@ public class TransactionService {
 				.map(this::map).collect(Collectors.toList()));
 	}
 
-	/**
-	 * Map {@link Transaction} to {@link TransactionResponse}
-	 * 
-	 * @param transaction
-	 * @return
-	 */
-	private TransactionResponse map(Transaction transaction) {
-		TransactionResponse result = new TransactionResponse();
-		result.setBalance(transaction.getBalance());
-		result.setId(transaction.getId());
-		result.setNumber(transaction.getNumber());
-		return result;
-	}
+    public boolean removeTransaction(String accountId, String transactionId) {
+        if (!accountService.isAccountExist(accountId)) {
+            throw new ServiceException(ErrorCode.INVALID_ACCOUNT,
+                    "Account doesn't exist");
+        }
+        Transaction transaction = transactionRepository.getTransactionById(accountId, transactionId).orElseThrow(
+                () -> new ServiceException(ErrorCode.INVALID_TRANSACTION,
+                        "Transaction doesn't exist"));
+        if (!transaction.getAccountId().equals(accountId)) {
+            throw new ServiceException(ErrorCode.TRANSACTION_NOT_BELONG_ACCOUNT,
+                    "Transaction doesn't belong to the account");
+        }
+        return transactionRepository.removeTransaction(transaction);
+    }
+
+    /**
+     * Map {@link Transaction} to {@link TransactionResponse}
+     *
+     * @param transaction
+     * @return
+     */
+    private TransactionResponse map(Transaction transaction) {
+        TransactionResponse result = new TransactionResponse();
+        result.setBalance(transaction.getBalance());
+        result.setId(transaction.getId());
+        result.setNumber(transaction.getNumber());
+        return result;
+    }
 
 }

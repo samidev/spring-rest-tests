@@ -44,4 +44,8 @@ public interface TransactionController {
 			@ApiParam("Account ID") @PathVariable("accountId") String accountId,
 			@ApiParam("Pageable information") @PageableDefault Pageable p);
 
+	@RequestMapping(value = "/{transactionId}", method = RequestMethod.DELETE)
+	ResponseEntity<Boolean> removeTransaction(@PathVariable("accountId") String accountId,
+											  @PathVariable("transactionId") String transactionId);
+
 }

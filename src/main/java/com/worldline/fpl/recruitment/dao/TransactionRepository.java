@@ -5,6 +5,8 @@ import org.springframework.data.domain.Pageable;
 
 import com.worldline.fpl.recruitment.entity.Transaction;
 
+import java.util.Optional;
+
 /**
  * Transaction repository
  * 
@@ -23,4 +25,8 @@ public interface TransactionRepository {
 	 * @return
 	 */
 	Page<Transaction> getTransactionsByAccount(String accountId, Pageable p);
+
+	Optional<Transaction> getTransactionById(String accountId, String transactionId);
+
+	boolean removeTransaction(Transaction transaction);
 }

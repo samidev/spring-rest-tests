@@ -3,6 +3,7 @@ package com.worldline.fpl.recruitment.dao.impl;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.InitializingBean;
@@ -61,6 +62,16 @@ public class TransactionRepositoryImpl implements TransactionRepository,
 		return new PageImpl<Transaction>(transactions.stream()
 				.filter(t -> t.getAccountId().equals(accountId))
 				.collect(Collectors.toList()));
+	}
+
+	@Override
+	public Optional<Transaction> getTransactionById(String accountId, String transactionId) {
+		return transactions.stream().filter(t -> t.getId().equals(transactionId)).findFirst();
+	}
+
+	@Override
+	public boolean removeTransaction(Transaction transaction) {
+		return transactions.remove(transaction);
 	}
 
 }

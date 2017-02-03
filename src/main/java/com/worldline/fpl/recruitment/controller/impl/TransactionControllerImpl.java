@@ -45,4 +45,11 @@ public class TransactionControllerImpl implements TransactionController {
 		return ResponseEntity.ok().body(page);
 	}
 
+	@Override
+	public ResponseEntity<Boolean> removeTransaction(@PathVariable("accountId") String accountId,
+													 @PathVariable("transactionId") String transactionId) {
+		boolean isSuccess = transactionService.removeTransaction(accountId, transactionId);
+		return ResponseEntity.status(HttpStatus.NO_CONTENT).body(isSuccess);
+	}
+
 }
