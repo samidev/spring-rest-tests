@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.worldline.fpl.recruitment.dao.TransactionRepository;
@@ -45,7 +46,7 @@ public class TransactionService {
 	public Page<TransactionResponse> getTransactionsByAccount(String accountId,
 			Pageable p) {
 		if (!accountService.isAccountExist(accountId)) {
-			throw new ServiceException(ErrorCode.INVALID_ACCOUNT,
+			throw new ServiceException(ErrorCode.UNEXISTED_ACCOUNT,
 					"Account doesn't exist");
 		}
 		return new PageImpl<TransactionResponse>(transactionRepository
@@ -53,19 +54,52 @@ public class TransactionService {
 				.map(this::map).collect(Collectors.toList()));
 	}
 
-    public boolean removeTransaction(String accountId, String transactionId) {
+    public void removeTransaction(String accountId, String transactionId) {
         if (!accountService.isAccountExist(accountId)) {
-            throw new ServiceException(ErrorCode.INVALID_ACCOUNT,
+            throw new ServiceException(ErrorCode.UNEXISTED_ACCOUNT,
                     "Account doesn't exist");
         }
-        Transaction transaction = transactionRepository.getTransactionById(accountId, transactionId).orElseThrow(
-                () -> new ServiceException(ErrorCode.INVALID_TRANSACTION,
+        Transaction transaction = transactionRepository.getTransaction(accountId, transactionId).orElseThrow(
+                () -> new ServiceException(ErrorCode.UNEXISTED_TRANSACTION,
                         "Transaction doesn't exist"));
         if (!transaction.getAccountId().equals(accountId)) {
             throw new ServiceException(ErrorCode.TRANSACTION_NOT_BELONG_ACCOUNT,
                     "Transaction doesn't belong to the account");
         }
-        return transactionRepository.removeTransaction(transaction);
+        transactionRepository.removeTransaction(transaction);
+    }
+
+    public Transaction createTransaction(String accountId, Transaction transaction) {
+        if (!accountService.isAccountExist(accountId)) {
+            throw new ServiceException(ErrorCode.UNEXISTED_ACCOUNT,
+                    "Account doesn't exist");
+        }
+        if (transaction == null || transaction.getBalance() == null
+                || transaction.getNumber() == null) {
+            throw new ServiceException(ErrorCode.INVALID_TRANSACTION,
+                    "Transaction isn't valid");
+        }
+        return transactionRepository.createTransaction(accountId, transaction);
+    }
+
+    public void updateTransaction(String accountId, String transactionId, Transaction newTransaction) {
+        if (!accountService.isAccountExist(accountId)) {
+            throw new ServiceException(ErrorCode.UNEXISTED_ACCOUNT,
+                    "Account doesn't exist");
+        }
+        if (newTransaction == null || newTransaction.getBalance() == null
+                || newTransaction.getNumber() == null) {
+            throw new ServiceException(ErrorCode.INVALID_TRANSACTION,
+                    "Transaction isn't valid");
+        }
+        Transaction transaction = transactionRepository.getTransaction(accountId, transactionId).orElseThrow(
+                () -> new ServiceException(ErrorCode.UNEXISTED_TRANSACTION,
+                        "Transaction doesn't exist"));
+        if (!transaction.getAccountId().equals(accountId)) {
+            throw new ServiceException(ErrorCode.TRANSACTION_NOT_BELONG_ACCOUNT,
+                    "Transaction doesn't belong to the account");
+        }
+        transactionRepository.updateTransaction(transactionId, newTransaction);
     }
 
     /**

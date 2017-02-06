@@ -26,7 +26,12 @@ public interface TransactionRepository {
 	 */
 	Page<Transaction> getTransactionsByAccount(String accountId, Pageable p);
 
-	Optional<Transaction> getTransactionById(String accountId, String transactionId);
+	Optional<Transaction> getTransaction(String accountId, String transactionId);
 
 	boolean removeTransaction(Transaction transaction);
+
+	Transaction createTransaction(String accountId, Transaction transaction);
+
+	void updateTransaction(String accountId, Transaction transaction);
+
 }

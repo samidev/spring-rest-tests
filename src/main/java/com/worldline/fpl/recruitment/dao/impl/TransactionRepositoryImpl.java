@@ -65,13 +65,36 @@ public class TransactionRepositoryImpl implements TransactionRepository,
 	}
 
 	@Override
-	public Optional<Transaction> getTransactionById(String accountId, String transactionId) {
+	public Optional<Transaction> getTransaction(String accountId, String transactionId) {
 		return transactions.stream().filter(t -> t.getId().equals(transactionId)).findFirst();
 	}
 
 	@Override
 	public boolean removeTransaction(Transaction transaction) {
 		return transactions.remove(transaction);
+	}
+
+	@Override
+	public Transaction createTransaction(String accountId, Transaction transaction) {
+		transaction.setId(getNextId());
+		transaction.setAccountId(accountId);
+		transactions.add(transaction);
+		return transaction;
+	}
+
+	@Override
+	public void updateTransaction(String transactionId, Transaction newTransaction) {
+		transactions.stream().filter(t -> t.getId().equals(transactionId)).findFirst().ifPresent(
+				t -> {
+					t.setBalance(newTransaction.getBalance());
+					t.setNumber(newTransaction.getNumber());
+				}
+		);
+	}
+
+	private String getNextId() {
+		int next = transactions.size() + 1;
+		return String.valueOf(next);
 	}
 
 }

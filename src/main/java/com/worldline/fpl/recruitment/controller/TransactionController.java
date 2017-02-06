@@ -1,5 +1,6 @@
 package com.worldline.fpl.recruitment.controller;
 
+import com.worldline.fpl.recruitment.entity.Transaction;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
@@ -11,6 +12,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
@@ -45,7 +47,16 @@ public interface TransactionController {
 			@ApiParam("Pageable information") @PageableDefault Pageable p);
 
 	@RequestMapping(value = "/{transactionId}", method = RequestMethod.DELETE)
-	ResponseEntity<Boolean> removeTransaction(@PathVariable("accountId") String accountId,
+	ResponseEntity<Void> removeTransaction(@PathVariable("accountId") String accountId,
 											  @PathVariable("transactionId") String transactionId);
+
+	@RequestMapping(value = "", method = RequestMethod.POST)
+	ResponseEntity<Transaction> createTransaction(@PathVariable("accountId") String accountId,
+												  @RequestBody Transaction transaction);
+
+	@RequestMapping(value = "/{transactionId}", method = RequestMethod.PUT)
+	ResponseEntity<Transaction> updateTransaction(@PathVariable("accountId") String accountId,
+												  @PathVariable("transactionId") String transactionId,
+												  @RequestBody Transaction newTransaction);
 
 }
