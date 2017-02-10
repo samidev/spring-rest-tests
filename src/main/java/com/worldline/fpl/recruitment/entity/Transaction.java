@@ -5,6 +5,11 @@ import java.math.BigDecimal;
 
 import lombok.Data;
 
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+
 /**
  * Transaction entity
  * 
@@ -12,13 +17,17 @@ import lombok.Data;
  *
  */
 @Data
+@Entity(name = "transactions")
 public class Transaction implements Serializable {
 
 	private static final long serialVersionUID = 706690724306325415L;
 
+	@Id
 	private String id;
 
-	private String accountId;
+	@ManyToOne
+	@JoinColumn(name = "accountID")
+	private Account account;
 
 	private String number;
 

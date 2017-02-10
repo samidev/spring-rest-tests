@@ -1,5 +1,6 @@
 package com.worldline.fpl.recruitment.service;
 
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
@@ -87,6 +88,16 @@ public class AccountService {
 		result.setNumber(account.getNumber());
 		result.setType(account.getType());
 		return result;
+	}
+
+	/**
+	 *
+	 * @param accountId
+	 *            the account id
+	 * @return
+	 */
+	public Optional<Account> getAccount(String accountId) {
+		return accountRepository.findById(accountId);
 	}
 
 	/**

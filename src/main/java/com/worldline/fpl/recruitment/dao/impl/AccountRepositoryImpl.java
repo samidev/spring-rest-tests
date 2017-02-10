@@ -15,6 +15,13 @@ import org.springframework.stereotype.Repository;
 import com.worldline.fpl.recruitment.dao.AccountRepository;
 import com.worldline.fpl.recruitment.entity.Account;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
+
 /**
  * Implementation of {@link AccountRepository}
  * 
@@ -22,51 +29,28 @@ import com.worldline.fpl.recruitment.entity.Account;
  *
  */
 @Repository
-public class AccountRepositoryImpl implements AccountRepository,
-		InitializingBean {
+public class AccountRepositoryImpl implements AccountRepository {
 
-	private List<Account> accounts;
-
-	@Override
-	public void afterPropertiesSet() throws Exception {
-		accounts = new ArrayList<>();
-
-		{
-			Account account = new Account();
-			account.setId("1");
-			account.setCreationDate(new Date());
-			account.setActive(true);
-			account.setType("SAVING");
-			account.setNumber("01000251215");
-			account.setBalance(BigDecimal.valueOf(4210.42));
-			accounts.add(account);
-		}
-		{
-			Account account = new Account();
-			account.setId("2");
-			account.setCreationDate(new Date());
-			account.setActive(false);
-			account.setType("CURRENT");
-			account.setNumber("01000251216");
-			account.setBalance(BigDecimal.valueOf(25.12));
-			accounts.add(account);
-		}
-
-	}
+	@PersistenceContext
+	private EntityManager em;
 
 	@Override
 	public Page<Account> findAll(Pageable p) {
-		return new PageImpl<Account>(accounts);
+		CriteriaBuilder cb = em.getCriteriaBuilder();
+		CriteriaQuery<Account> cq = cb.createQuery(Account.class);
+		Root<Account> rootEntry = cq.from(Account.class);
+		CriteriaQuery<Account> all = cq.select(rootEntry);
+		TypedQuery<Account> allQuery = em.createQuery(all);
+		return new PageImpl<>(allQuery.getResultList());
 	}
 
 	@Override
 	public Optional<Account> findById(String accountId) {
-		return accounts.stream().filter(a -> a.getId().equals(accountId))
-				.findFirst();
+		return Optional.ofNullable(em.find(Account.class, accountId));
 	}
 
 	@Override
 	public boolean exists(String accountId) {
-		return accounts.stream().anyMatch(a -> a.getId().equals(accountId));
+		return findById(accountId).isPresent();
 	}
 }

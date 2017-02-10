@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.worldline.fpl.recruitment.entity.Account;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -15,6 +16,14 @@ import org.springframework.stereotype.Repository;
 import com.worldline.fpl.recruitment.dao.TransactionRepository;
 import com.worldline.fpl.recruitment.entity.Transaction;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.CriteriaUpdate;
+import javax.persistence.criteria.Root;
+
 /**
  * Implementation of {@link TransactionRepository}
  * 
@@ -22,79 +31,51 @@ import com.worldline.fpl.recruitment.entity.Transaction;
  *
  */
 @Repository
-public class TransactionRepositoryImpl implements TransactionRepository,
-		InitializingBean {
+public class TransactionRepositoryImpl implements TransactionRepository {
 
-	private List<Transaction> transactions;
-
-	@Override
-	public void afterPropertiesSet() throws Exception {
-		transactions = new ArrayList<>();
-		{
-			Transaction transaction = new Transaction();
-			transaction.setAccountId("1");
-			transaction.setBalance(BigDecimal.valueOf(42.12));
-			transaction.setId("1");
-			transaction.setNumber("12151885120");
-			transactions.add(transaction);
-		}
-		{
-			Transaction transaction = new Transaction();
-			transaction.setAccountId("1");
-			transaction.setBalance(BigDecimal.valueOf(456.00));
-			transaction.setId("2");
-			transaction.setNumber("12151885121");
-			transactions.add(transaction);
-		}
-		{
-			Transaction transaction = new Transaction();
-			transaction.setAccountId("1");
-			transaction.setBalance(BigDecimal.valueOf(-12.12));
-			transaction.setId("3");
-			transaction.setNumber("12151885122");
-			transactions.add(transaction);
-		}
-	}
+	@PersistenceContext
+	private EntityManager entityManager;
 
 	@Override
 	public Page<Transaction> getTransactionsByAccount(String accountId,
 			Pageable p) {
-		return new PageImpl<Transaction>(transactions.stream()
-				.filter(t -> t.getAccountId().equals(accountId))
-				.collect(Collectors.toList()));
+		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+		CriteriaQuery<Transaction> cq = cb.createQuery(Transaction.class);
+		Root<Transaction> rootEntry = cq.from(Transaction.class);
+		cq.select(rootEntry);
+		cq.where(cb.equal(rootEntry.join("account").get("id"), accountId));
+		return new PageImpl<>(entityManager.createQuery(cq).getResultList());
 	}
 
 	@Override
-	public Optional<Transaction> getTransaction(String accountId, String transactionId) {
-		return transactions.stream().filter(t -> t.getId().equals(transactionId)).findFirst();
+	public Optional<Transaction> getTransaction(String transactionId) {
+		return Optional.ofNullable(entityManager.find(Transaction.class, transactionId));
 	}
 
 	@Override
-	public boolean removeTransaction(Transaction transaction) {
-		return transactions.remove(transaction);
+	public void removeTransaction(Transaction transaction) {
+		entityManager.remove(transaction);
 	}
 
 	@Override
-	public Transaction createTransaction(String accountId, Transaction transaction) {
+	public Transaction createTransaction(Transaction transaction) {
 		transaction.setId(getNextId());
-		transaction.setAccountId(accountId);
-		transactions.add(transaction);
+		entityManager.persist(transaction);
 		return transaction;
 	}
 
 	@Override
-	public void updateTransaction(String transactionId, Transaction newTransaction) {
-		transactions.stream().filter(t -> t.getId().equals(transactionId)).findFirst().ifPresent(
-				t -> {
-					t.setBalance(newTransaction.getBalance());
-					t.setNumber(newTransaction.getNumber());
-				}
-		);
+	public void updateTransaction(Transaction updatedObject) {
+		entityManager.merge(updatedObject);
 	}
 
 	private String getNextId() {
-		int next = transactions.size() + 1;
-		return String.valueOf(next);
+		CriteriaBuilder qb = entityManager.getCriteriaBuilder();
+		CriteriaQuery<Long> cq = qb.createQuery(Long.class);
+		Root<Transaction> root = cq.from(Transaction.class);
+		cq.select(qb.max(root.get("id")));
+		Long newId = Long.parseLong(String.valueOf(entityManager.createQuery(cq).getSingleResult())) + 1;
+		return newId.toString();
 	}
 
 }

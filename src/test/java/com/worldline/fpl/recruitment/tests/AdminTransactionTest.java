@@ -94,7 +94,7 @@ public class AdminTransactionTest extends AbstractTest {
 
 	@Test
 	public void deleteUnexistingTransaction() throws Exception {
-		mockMvc.perform(delete("/accounts/1/transactions/4")).andExpect(
+		mockMvc.perform(delete("/accounts/1/transactions/1")).andExpect(
 				status().isNotFound());
 	}
 
